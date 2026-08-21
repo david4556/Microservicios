@@ -15,7 +15,7 @@ public enum DisponibilidadMedico {
 
         DISPONIBLE  (1L, " disponible para atender"),
         EN_CONSULTA(2L, " en consulta"),
-                FUERA_DE_TURNO(3L, " fuera de turo"),
+    FUERA_DE_TURNO(3L, " fuera de turo"),
                 DE_GUARDIA(4L, " de guardia"),
                 NO_DISPONIBLE(5L, " no disponible");
 
