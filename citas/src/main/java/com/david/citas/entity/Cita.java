@@ -8,7 +8,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.Locale;
 
 @Setter
 @Entity
@@ -52,9 +51,7 @@ public class Cita {
             throw new IllegalArgumentException("la fecha cita es requerida");
     }
 
-    public static void validarDatos
-            (Long idPaciente, Long idMedico,
-LocalDateTime fechaCita, String sintomas){
+    public static void validarDatos(Long idPaciente, Long idMedico, LocalDateTime fechaCita, String sintomas){
 
 
             validarId(idPaciente, "paciente");
@@ -90,13 +87,11 @@ LocalDateTime fechaCita, String sintomas){
 
         public void eliminar(){
 
-        validarEliminacionPermitida();
-        this.estadoRegistro = EstadoRegistro.ELIMINADO;
+            validarEliminacionPermitida();
+            this.estadoRegistro = EstadoRegistro.ELIMINADO;
         }
 
-        public void actualizar (
-
-                Long idPaciente, Long idMedico,
+        public void actualizar (Long idPaciente, Long idMedico,
                 LocalDateTime fechaCita, String sintomas
         ){
 
@@ -110,22 +105,25 @@ LocalDateTime fechaCita, String sintomas){
             this.sintomas = sintomas.trim();
         }
 
-        public void actualizarEstaoCita(EstadoCita nuevoEstado){
+    public void actualizarEstadoCita(EstadoCita nuevoEstado) {
 
-
-        if (nuevoEstado == null)
-            throw  new IllegalArgumentException("el nuevo estado de la cita es requerida");
-
-        this.estadoCita = nuevoEstado;
-
-
-            if (!estadoCita.puedeCambiarA(nuevoEstado))
-                throw  new IllegalStateException("la cita con estado "
-                +estadoCita + "solo puede cambiar a "
-                +estadoCita.puedeCambiar());
-            this.estadoCita= nuevoEstado;
+        if (nuevoEstado == null) {
+            throw new IllegalArgumentException(
+                    "el nuevo estado de la cita es requerido"
+            );
         }
 
+        if (!this.estadoCita.puedeCambiarA(nuevoEstado)) {
+            throw new IllegalStateException(
+                    "la cita con estado "
+                            + this.estadoCita
+                            + " solo puede cambiar a "
+                            + this.estadoCita.puedeCambiar()
+            );
+        }
+
+        this.estadoCita = nuevoEstado;
+    }
 
 
          public  static  Cita crear( Long idPaciente,

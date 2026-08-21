@@ -1,5 +1,6 @@
 package com.david.medicos.service;
 
+import com.david.commons.client.CitaClient;
 import com.david.commons.dto.medicos.MedicoRequest;
 import com.david.commons.dto.medicos.MedicoResponse;
 import com.david.commons.enums.DisponibilidadMedico;
@@ -26,6 +27,8 @@ public class MedicoServiceImpl  implements MedicoService{
 
     private final MedicoMapper medicoMapper;
 
+    private final CitaClient citaClient;
+
     @Override
     @Transactional(readOnly = true)
     public List<MedicoResponse> listar() {
@@ -45,25 +48,28 @@ public class MedicoServiceImpl  implements MedicoService{
                 .orElseThrow(()-> new RecursoNoEncontradoException("Medico sin estado:" +id)));
     }
 
-    @Override
 
+
+    @Override
     public void actualizarDisponibilidadMedico(Long idMedico, Long idDisponibilidad) {
 
+        Medico medico = obtenerMedicoActivoOException(idMedico);
 
-        Medico medico =obtenerMedicoActivoOException(idMedico);
+        log.info("Actualizando disponibilidad del médico: {}", idMedico);
 
-        log.info("Actualizando medico:{}", idMedico);
-        DisponibilidadMedico nuevaDisponibilidad = DisponibilidadMedico
-                .obtenerDisponibilidadPorCodigo(idDisponibilidad);
+        DisponibilidadMedico nuevaDisponibilidad =
+                DisponibilidadMedico.obtenerDisponibilidadPorCodigo(idDisponibilidad);
 
-        DisponibilidadMedico disponibilidadAnterior = medico.getDisponibilidad();
 
         medico.actualizarDisponibilidad(nuevaDisponibilidad);
-        log.info("disponibilidad cambio", idMedico, disponibilidadAnterior, nuevaDisponibilidad);
 
+
+        log.info(
+                "Disponibilidad del médico {} actualizada a {}",
+                idMedico,
+                nuevaDisponibilidad
+        );
     }
-
-
     @Override
     @Transactional(readOnly = true)
     public MedicoResponse obtenerPorId(Long id) {

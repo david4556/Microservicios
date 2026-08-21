@@ -8,6 +8,7 @@ import com.david.commons.controller.CommonController;
 import jakarta.validation.constraints.Positive;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
@@ -27,5 +28,12 @@ public class CitaController extends CommonController<CitaRequest, CitaResponse, 
         service.actualizarEstadoCita(idCita, idEstado);
         return ResponseEntity.noContent().build();
     }
+    @GetMapping("/medico/{idMedico}/tiene-cita-confirmada-en-curso")
+    public ResponseEntity<Boolean> tieneCitaConfirmadaOEnCursoMedico(
+            @PathVariable Long idMedico) {
 
+        return ResponseEntity.ok(
+                service.tieneCitaConfirmadaOEnCursoMedico(idMedico)
+        );
+    }
 }
