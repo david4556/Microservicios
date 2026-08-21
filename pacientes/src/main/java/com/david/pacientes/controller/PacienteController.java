@@ -13,10 +13,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @Validated
-public class PacienteController extends CommonController<
-        PacienteRequest,
-        PacienteResponse,
-        PacienteService> {
+public class PacienteController extends CommonController<PacienteRequest, PacienteResponse, PacienteService> {
+
 
     public PacienteController(PacienteService service) {
         super(service);

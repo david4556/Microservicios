@@ -1,5 +1,6 @@
 package com.david.pacientes.service;
 
+import com.david.commons.client.CitaClient;
 import com.david.commons.dto.pacientes.PacienteRequest;
 import com.david.commons.dto.pacientes.PacienteResponse;
 import com.david.commons.enums.EstadoRegistro;
@@ -24,6 +25,8 @@ public class PacienteServiceImpl implements PacienteService {
 
     private final PacienteMapper pacienteMapper;
 
+    private final CitaClient citaClient;
+
 
     @Override
     @Transactional(readOnly = true)
@@ -43,15 +46,10 @@ public class PacienteServiceImpl implements PacienteService {
     @Transactional(readOnly = true)
     public PacienteResponse obtenerPacientePorIdSinEstado(Long id) {
 
-        log.info("Buscando paciente sin estado: {}", id);
+        log.info("Buscando paciente sin validar estado: {}", id);
 
-        return pacienteMapper.entidadAResponse(
-                pacienteRepository.findById(id)
-                        .orElseThrow(() ->
-                                new RecursoNoEncontradoException(
-                                        "Paciente sin estado: " + id
-                                )
-                        )
+        return pacienteMapper.entidadAResponse(pacienteRepository.findById(id)
+                        .orElseThrow(() -> new RecursoNoEncontradoException("Paciente no encontrado: " + id))
         );
     }
 
@@ -60,21 +58,34 @@ public class PacienteServiceImpl implements PacienteService {
     @Transactional(readOnly = true)
     public PacienteResponse obtenerPorId(Long id) {
 
-        return pacienteMapper.entidadAResponse(
-                obtenerPacienteActivoOException(id)
+        return pacienteMapper.entidadAResponse(obtenerPacienteActivoOException(id)
         );
     }
 
 
     @Override
-    public PacienteResponse registrar(PacienteRequest request) {
+    public PacienteResponse registrar(
+            PacienteRequest request) {
 
-        log.info(
-                "Registrar nuevo paciente {}",
+        log.info("Registrando nuevo paciente: {}",
                 request.nombre()
         );
 
-        Paciente paciente = pacienteMapper.requestAEntidad(request);
+        Paciente paciente =
+                pacienteMapper.requestAEntidad(request);
+
+        paciente.validarDatos(
+                request.nombre(),
+                request.apellidoPaterno(),
+                request.apellidoMaterno(),
+                request.direccion(),
+                request.edad(),
+                request.peso(),
+                request.estatura(),
+                request.email(),
+                request.telefono()
+        );
+
         paciente.setEstadoRegistro(EstadoRegistro.ACTIVO);
 
         paciente.calcularIMC();
@@ -83,28 +94,25 @@ public class PacienteServiceImpl implements PacienteService {
 
         pacienteRepository.save(paciente);
 
-        log.info(
-                "Nuevo paciente: {}",
-                paciente.getNombre()
-        );
+        log.info("Paciente registrado: {}", paciente.getId());
 
-        return pacienteMapper.entidadAResponse(paciente);
+        return pacienteMapper.entidadAResponse(
+                paciente
+        );
     }
 
 
     @Override
-    public PacienteResponse actualizar(
-            PacienteRequest request,
-            Long id) {
+    public PacienteResponse actualizar(PacienteRequest request, Long id) {
 
-        Paciente paciente =
-                obtenerPacienteActivoOException(id);
+        Paciente paciente = obtenerPacienteActivoOException(id);
 
-        log.info(
-                "Actualizando paciente: {}",
-                id
-        );
 
+        if (citaClient.tieneCitaConfirmadaOEnCurso(id)) {
+            throw new IllegalStateException(
+                    "No se puede actualizar el paciente porque tiene una cita CONFIRMADA o EN_CURSO"
+            );
+        }
         paciente.actualizar(
                 request.nombre(),
                 request.apellidoPaterno(),
@@ -115,14 +123,13 @@ public class PacienteServiceImpl implements PacienteService {
                 request.estatura(),
                 request.email(),
                 request.telefono()
-
         );
 
         paciente.calcularIMC();
 
         paciente.generarNumeroExpediente();
 
-        log.info("Paciente actualizado");
+        log.info("Paciente actualizado: {}", id);
 
         return pacienteMapper.entidadAResponse(paciente);
     }
@@ -131,39 +138,22 @@ public class PacienteServiceImpl implements PacienteService {
     @Override
     public void eliminar(Long id) {
 
-        Paciente paciente =
-                obtenerPacienteActivoOException(id);
+        Paciente paciente = obtenerPacienteActivoOException(id);
 
-        log.info(
-                "Eliminando paciente: {}",
-                id
-        );
+        if (citaClient.tieneCitaConfirmadaOEnCurso(id)) {
+            throw new IllegalStateException(
+                    "No se puede eliminar el paciente porque tiene una cita CONFIRMADA o EN_CURSO"
+            );
+        }
 
         paciente.eliminar();
 
-        log.info(
-                "Eliminado exitoso: {}",
-                id
-        );
+        log.info("Paciente eliminado lógicamente: {}", id);
     }
 
 
     private Paciente obtenerPacienteActivoOException(Long id) {
 
-        log.info(
-                "Buscando: {}",
-                id
-        );
-
-        return pacienteRepository
-                .findByIdAndEstadoRegistro(
-                        id,
-                        EstadoRegistro.ACTIVO
-                )
-                .orElseThrow(() ->
-                        new RecursoNoEncontradoException(
-                                "Paciente no encontrado: " + id
-                        )
-                );
+        return pacienteRepository.findByIdAndEstadoRegistro(id, EstadoRegistro.ACTIVO).orElseThrow(() -> new RecursoNoEncontradoException("El paciente con ID " + id + " no existe o no está activo"));
     }
 }

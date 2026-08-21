@@ -47,13 +47,13 @@ public class Paciente {
     @Column(name = "IMC")
     private Double imc;
 
-    @Column(name = "TELEFONO", nullable = false, unique = true, length = 10)
+    @Column(name = "TELEFONO", nullable = false, length = 10)
     private String telefono;
 
-    @Column(name = "EMAIL", nullable = false, unique = true, length = 100)
+    @Column(name = "EMAIL", nullable = false, length = 100)
     private String email;
 
-    @Column(name = "NUM_EXPEDIENTE", nullable = false, unique = true, length = 50)
+    @Column(name = "NUM_EXPEDIENTE", nullable = false, length = 50)
     private String numeroExpediente;
 
     @Enumerated(EnumType.STRING)
@@ -80,8 +80,11 @@ public class Paciente {
         StringCustomUtils.validarTamanio(email, 8, 100,
                 "El email es requerido y debe tener entre 8 y 100 caracteres");
 
+
         StringCustomUtils.validarTamanio(telefono, 10, 10, "El teléfono debe contener exactamente 10 dígitos");
-    }
+
+
+     }
 
 
     private void validarNoEliminado(){
@@ -116,11 +119,11 @@ public class Paciente {
     }
 
     public void calcularIMC() {
-        Double estaturaCuadrada = estatura;
-
-        this.imc = peso/(estatura * estatura);
-
+        this.imc = peso / (estatura * estatura);
     }
+
+
+
     public void eliminar(){
 
         validarNoEliminado();
