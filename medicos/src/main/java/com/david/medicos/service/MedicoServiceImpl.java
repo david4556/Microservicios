@@ -85,7 +85,9 @@ public class MedicoServiceImpl  implements MedicoService{
 
         validarDatosUnicos(request);
 
+
         Medico medico = medicoMapper.requestAEntidad(request);
+        medico.setEstadoRegistro(EstadoRegistro.ACTIVO);
 
                 medico.actualizarEspecialidad(
                         EspecialidaMediico.obtenerEspecialidadPorCodigo(request.idEspecialidad()));
@@ -125,11 +127,18 @@ public class MedicoServiceImpl  implements MedicoService{
     @Override
     public void eliminar(Long id) {
         Medico medico =obtenerMedicoActivoOException(id);
-
+        validarCitasActivas(id, "eliminar");
         log.info("Eliminando medico:{}", id);
 medico.eliminar();
 log.info("eliminado exitoso", id);
 
+    }
+    private void validarCitasActivas(Long idMedico, String accion) {
+        if (citaClient.tieneCitaConfirmadaOEnCursoMedico(idMedico)) {
+            throw new IllegalStateException(
+                    String.format("No se puede %s el médico porque tiene una cita CONFIRMADA o EN_CURSO", accion)
+            );
+        }
     }
 
     private Medico obtenerMedicoActivoOException(Long id){
