@@ -36,7 +36,10 @@ public class CitaServiceImpl implements CitaService {
             EstadoCita.CONFIRMADA,
             EstadoCita.EN_CURSO
     );
-
+    private static final List<EstadoCita> ESTADOS_PENDIENTE_O_CONFIRMADA = List.of(
+            EstadoCita.PENDIENTE,
+            EstadoCita.CONFIRMADA
+    );
     @Override
     @Transactional(readOnly = true)
     public List<CitaResponse> listar() {
@@ -172,7 +175,7 @@ public class CitaServiceImpl implements CitaService {
     private void validarSinCitaActivaPaciente(Long idPaciente, Long idCitaExcluir) {
         boolean tieneCita = (idCitaExcluir == null)
                 ? citaRepository.existsByIdPacienteAndEstadoCitaIn(idPaciente, ESTADOS_ACTIVOS)
-                : citaRepository.existsByIdPacienteAndEstadoCitaInAndIdNot(idPaciente, ESTADOS_ACTIVOS, idCitaExcluir);
+                : citaRepository.existsByIdPacienteAndEstadoCitaInAndIdNot(idPaciente, ESTADOS_PENDIENTE_O_CONFIRMADA, idCitaExcluir);
 
         if (tieneCita) {
             throw new IllegalStateException("El paciente ya tiene una cita activa");
@@ -182,7 +185,7 @@ public class CitaServiceImpl implements CitaService {
     private void validarSinCitaActivaMedico(Long idMedico, Long idCitaExcluir) {
         boolean tieneCita = (idCitaExcluir == null)
                 ? citaRepository.existsByIdMedicoAndEstadoCitaIn(idMedico, ESTADOS_ACTIVOS)
-                : citaRepository.existsByIdMedicoAndEstadoCitaInAndIdNot(idMedico, ESTADOS_ACTIVOS, idCitaExcluir);
+                : citaRepository.existsByIdMedicoAndEstadoCitaInAndIdNot(idMedico, ESTADOS_PENDIENTE_O_CONFIRMADA, idCitaExcluir);
 
         if (tieneCita) {
             throw new IllegalStateException("El médico ya tiene una cita activa");
